@@ -202,7 +202,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
      */
     protected static final @NonNull String EMPTY_STRING = ""; //$NON-NLS-1$
 
-    private static final boolean IS_LINUX = System.getProperty("os.name").contains("Linux") ? true : false; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final boolean IS_LINUX = System.getProperty("os.name").contains("Linux"); //$NON-NLS-1$ //$NON-NLS-2$
     private static final boolean IS_WIN32 = SWT.getPlatform().equals("win32"); //$NON-NLS-1$
 
     private static final String FONT_DEFINITION_ID = "org.eclipse.tracecompass.tmf.ui.font.eventtable"; //$NON-NLS-1$
@@ -533,7 +533,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
     }
 
     private final class TooltipListener implements Listener {
-        Shell tooltipShell = null;
+        private Shell tooltipShell = null;
 
         @Override
         public void handleEvent(final Event event) {
@@ -668,6 +668,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
 
         /**
          * Flag to indicate default FG color
+         *
          * @since 4.2
          */
         String IS_DEFAULT_FG_COLOR = "$default_fc"; //$NON-NLS-1$
@@ -679,7 +680,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
      * @version 1.0
      * @author Patrick Tasse
      */
-    public static enum HeaderState {
+    public enum HeaderState {
         /**
          * No search filter is applied
          *
@@ -768,8 +769,6 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
     private Menu fHeaderMenu;
 
     private Menu fTablePopup;
-
-    private Menu fRawTablePopup;
 
     private Point fLastMenuCursorLocation;
     private MenuManager fRawViewerPopupMenuManager;
@@ -891,7 +890,6 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
             }
         }
 
-
         TmfMarginColumn collapseCol = new TmfMarginColumn();
         fColumns.add(MARGIN_COLUMN_INDEX, collapseCol);
 
@@ -985,9 +983,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
 
         createPopupMenu();
 
-        fComposite.addDisposeListener((e) -> {
-            internalDispose();
-        });
+        fComposite.addDisposeListener(e -> internalDispose());
     }
 
     private IAction createAutoFitAction(TableColumn column) {
@@ -1178,7 +1174,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
             @Override
             public void run() {
 
-                final TableItem items[] = fTable.getSelection();
+                final TableItem[] items = fTable.getSelection();
                 if (items.length != 1) {
                     return;
                 }
@@ -1288,7 +1284,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
         };
 
         class ToggleBookmarkAction extends Action {
-            Long fRank;
+            private final Long fRank;
 
             public ToggleBookmarkAction(final String text, final Long rank) {
                 super(text);
@@ -1393,8 +1389,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
             }
 
             /*
-             * Only show collapse filter if at least one trace can be
-             * collapsed.
+             * Only show collapse filter if at least one trace can be collapsed.
              */
             boolean isCollapsible = false;
             if (fTrace != null) {
@@ -1459,8 +1454,8 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
         fTablePopup = fTablePopupMenuManager.createContextMenu(fTable);
         fTable.setMenu(fTablePopup);
 
-        fRawTablePopup = fRawViewerPopupMenuManager.createContextMenu(fRawViewer);
-        fRawViewer.setMenu(fRawTablePopup);
+        Menu rawTablePopup = fRawViewerPopupMenuManager.createContextMenu(fRawViewer);
+        fRawViewer.setMenu(rawTablePopup);
     }
 
     /**
@@ -1736,9 +1731,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
 
         // Handle the header row selection
         fTable.addMouseListener(new MouseAdapter() {
-            int columnIndex;
-            TableColumn column;
-            TableItem item;
+            private TableColumn column;
 
             @Override
             public void mouseDown(final MouseEvent event) {
@@ -1747,7 +1740,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                 }
                 // Identify the selected row
                 final Point point = new Point(event.x, event.y);
-                item = fTable.getItem(point);
+                TableItem item = fTable.getItem(point);
 
                 // Header row selected
                 if ((item != null) && (fTable.indexOf(item) == 0)) {
@@ -1761,7 +1754,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                     }
 
                     // Identify the selected column
-                    columnIndex = -1;
+                    int columnIndex = -1;
                     for (int i = 0; i < fTable.getColumns().length; i++) {
                         final Rectangle rect = item.getBounds(i);
                         if (rect.contains(point)) {
@@ -1788,7 +1781,8 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                     newEditor.addFocusListener(new FocusAdapter() {
                         @Override
                         public void focusLost(final FocusEvent e) {
-                            // With GTK, focus gets lost during initialization, ignore
+                            // With GTK, focus gets lost during initialization,
+                            // ignore
                             if (!(boolean) newEditor.getData()) {
                                 return;
                             }
@@ -2272,8 +2266,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                     return;
                 }
                 /*
-                 * +1 for header row, +2 for top and bottom filter status
-                 * rows
+                 * +1 for header row, +2 for top and bottom filter status rows
                  */
                 fTable.setItemCount((int) fFilterMatchCount + 3);
                 fTable.refresh();
@@ -2474,7 +2467,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                 }
                 request = new TmfEventRequest(ITmfEvent.class, TmfTimeRange.ETERNITY,
                         (int) rank, nbRequested, ExecutionType.BACKGROUND) {
-                    long currentRank = rank;
+                    private long currentRank = rank;
 
                     @Override
                     public void handleData(final ITmfEvent event) {
@@ -2633,7 +2626,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
         fTable.setRedraw(false);
         try {
             int horizontalPos = fTable.getHorizontalBar().getSelection();
-            TableColumn tableColumns[] = fTable.getColumns();
+            TableColumn[] tableColumns = fTable.getColumns();
             for (int i = 0; i < tableColumns.length; i++) {
                 final TableColumn column = tableColumns[i];
                 if (Objects.equals(column.getData(Key.WIDTH), SWT.DEFAULT)) {
@@ -2746,8 +2739,8 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                 ITmfEvent passedEvent = event;
                 if (!(column instanceof TmfMarginColumn) && (event instanceof CachedEvent)) {
                     /*
-                     * Make sure that the event object from the trace is passed to all columns but
-                     * the TmfMarginColumn
+                     * Make sure that the event object from the trace is passed
+                     * to all columns but the TmfMarginColumn
                      */
                     passedEvent = ((CachedEvent) event).event;
                 }
@@ -2855,8 +2848,9 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
         }
         if (width.length > 0 && width[0] == 0) {
             /*
-             * When width of margin column is 0 instead of SWT.DEFAULT, it is an old
-             * setting. Reset all widths to SWT.DEFAULT to initially enable AutoFit.
+             * When width of margin column is 0 instead of SWT.DEFAULT, it is an
+             * old setting. Reset all widths to SWT.DEFAULT to initially enable
+             * AutoFit.
              */
             Arrays.fill(width, SWT.DEFAULT);
         }
@@ -3112,7 +3106,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                             @Override
                             public void run(IProgressMonitor monitor) throws CoreException {
                                 final IMarker bookmark = bookmarksFile.createMarker(IMarker.BOOKMARK);
-                                bookmark.setAttribute(IMarker.MESSAGE, message.toString());
+                                bookmark.setAttribute(IMarker.MESSAGE, Objects.requireNonNull(message));
                                 bookmark.setAttribute(IMarker.LOCATION, location);
                                 bookmark.setAttribute(ITmfMarker.MARKER_RANK, rank.toString());
                                 bookmark.setAttribute(ITmfMarker.MARKER_TIME, Long.toString(timestamp.toNanos()));
@@ -3364,16 +3358,19 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                     }
 
                     /**
-                     * Verify if the event is within the trace range and adjust if
-                     * necessary.
+                     * Verify if the event is within the trace range and adjust
+                     * if necessary.
+                     *
                      * @param monitor
-                     *                a progress monitor
+                     *            a progress monitor
                      * @return A pair of rank representing the selected area
                      **/
                     @Nullable
                     private Pair<Long, Long> getSelectedRanks(IProgressMonitor monitor) {
 
-                        /* Clamp the timestamp value to fit inside of the trace */
+                        /*
+                         * Clamp the timestamp value to fit inside of the trace
+                         */
                         ITmfTimestamp timestampBegin = ts;
                         if (timestampBegin.compareTo(fTrace.getStartTime()) < 0) {
                             timestampBegin = fTrace.getStartTime();
@@ -3400,7 +3397,9 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                             return null;
                         }
 
-                        /* Adjust the rank of the selection to the right range */
+                        /*
+                         * Adjust the rank of the selection to the right range
+                         */
                         if (timestampBegin.compareTo(timestampEnd) > 0) {
                             te = timestampEnd;
                             contextEnd = fTrace.seekEvent(te);
@@ -3411,8 +3410,9 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                                 return null;
                             }
                             /*
-                             * To include all events at the begin time, seek at the
-                             * next nanosecond and then use the previous rank
+                             * To include all events at the begin time, seek at
+                             * the next nanosecond and then use the previous
+                             * rank
                              */
                             tb = timestampBegin.normalize(1, ITmfTimestamp.NANOSECOND_SCALE);
                             if (tb.compareTo(fTrace.getEndTime()) <= 0) {
@@ -3424,8 +3424,8 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                             }
                             rankBegin = (rankBegin == ITmfContext.UNKNOWN_RANK ? fTrace.getNbEvents() : rankBegin) - 1;
                             /*
-                             * If no events in selection range, select only the next
-                             * event
+                             * If no events in selection range, select only the
+                             * next event
                              */
                             rankBegin = rankBegin >= rankEnd ? rankBegin : rankEnd;
                         } else {
@@ -3437,8 +3437,9 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                                 return null;
                             }
                             /*
-                             * To include all events at the end time, seek at the
-                             * next nanosecond and then use the previous rank
+                             * To include all events at the end time, seek at
+                             * the next nanosecond and then use the previous
+                             * rank
                              */
                             te = timestampEnd.normalize(1, ITmfTimestamp.NANOSECOND_SCALE);
                             if (te.compareTo(fTrace.getEndTime()) <= 0) {
@@ -3450,8 +3451,8 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                             }
                             rankEnd = (rankEnd == ITmfContext.UNKNOWN_RANK ? fTrace.getNbEvents() : rankEnd) - 1;
                             /*
-                             * If no events in selection range, select only the next
-                             * event
+                             * If no events in selection range, select only the
+                             * next event
                              */
                             rankEnd = rankEnd >= rankBegin ? rankEnd : rankBegin;
                         }
@@ -3488,8 +3489,8 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                 };
                 timeSelectJob.setSystem(true);
                 /*
-                 *  Make subsequent jobs not run concurrently so that they are
-                 *  executed in order.
+                 * Make subsequent jobs not run concurrently so that they are
+                 * executed in order.
                  */
                 timeSelectJob.setRule(fTimeSelectMutexRule);
                 timeSelectJob.schedule();

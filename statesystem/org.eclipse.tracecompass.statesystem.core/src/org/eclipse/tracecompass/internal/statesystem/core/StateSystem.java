@@ -299,7 +299,7 @@ public class StateSystem implements ITmfStateSystemBuilder {
 
     @Override
     public List<@NonNull Integer> getSubAttributes(int quark, boolean recursive, String pattern) {
-        List<Integer> all = getSubAttributes(quark, recursive);
+        List<@NonNull Integer> all = getSubAttributes(quark, recursive);
         List<@NonNull Integer> ret = new LinkedList<>();
         Pattern regex = Pattern.compile(pattern, Pattern.MULTILINE | Pattern.DOTALL);
         for (Integer attQuark : all) {
@@ -433,7 +433,6 @@ public class StateSystem implements ITmfStateSystemBuilder {
             return null;
         }
 
-
         int stackDepth = 0;
 
         if (previousSV instanceof Integer) {
@@ -476,7 +475,7 @@ public class StateSystem implements ITmfStateSystemBuilder {
          * Nullify our children first, recursively. We pass 'false' because we
          * handle the recursion ourselves.
          */
-        List<Integer> childAttributes = getSubAttributes(attributeQuark, false);
+        List<@NonNull Integer> childAttributes = getSubAttributes(attributeQuark, false);
         for (int childNodeQuark : childAttributes) {
             if (attributeQuark == childNodeQuark) {
                 /* Something went very wrong when building out attribute tree */
@@ -554,7 +553,7 @@ public class StateSystem implements ITmfStateSystemBuilder {
         }
 
         try (ScopeLog log = new ScopeLog(LOGGER, Level.FINER, "StateSystem:FullQuery", //$NON-NLS-1$
-                "ssid", getSSID(), "ts", t);) { //$NON-NLS-1$ //$NON-NLS-2$
+                "ssid", getSSID(), "ts", t)) { //$NON-NLS-1$ //$NON-NLS-2$
 
             final int nbAttr = getNbAttributes();
             List<@Nullable ITmfStateInterval> stateInfo = new ArrayList<>(nbAttr);
@@ -642,7 +641,7 @@ public class StateSystem implements ITmfStateSystemBuilder {
             throw new StateSystemDisposedException();
         }
 
-        boolean reverse = (start > end) ? true : false;
+        boolean reverse = start > end;
         TimeRangeCondition timeCondition = TimeRangeCondition.forContinuousRange(Math.min(start, end), Math.max(start, end));
         return query2D(quarks, timeCondition, reverse);
     }
@@ -650,7 +649,7 @@ public class StateSystem implements ITmfStateSystemBuilder {
     private Iterable<@NonNull ITmfStateInterval> query2D(@NonNull Collection<@NonNull Integer> quarks, TimeRangeCondition timeCondition, boolean reverse)
             throws TimeRangeException, IndexOutOfBoundsException {
         if (timeCondition.min() < getStartTime()) {
-            throw new TimeRangeException("Time conditions " + timeCondition.min() + " is lower than state system start time: " + getStartTime());  //$NON-NLS-1$ //$NON-NLS-2$
+            throw new TimeRangeException("Time conditions " + timeCondition.min() + " is lower than state system start time: " + getStartTime()); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         if (quarks.isEmpty()) {

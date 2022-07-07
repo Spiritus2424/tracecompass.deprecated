@@ -11,7 +11,10 @@
 
 package org.eclipse.tracecompass.tmf.core.event.aspect;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.logging.Level;
@@ -43,13 +46,14 @@ public class MultiAspect<T> implements ITmfEventAspect<T> {
     private final Iterable<ITmfEventAspect<?>> fAspects;
 
     /**
-     * Factory method for building a multi aspect.
+     * Factory method for building a {@link MultiAspect}.
      *
      * @param aspects
-     *            Aspects sharing the same type as the "aspectClass" parameter
+     *            Aspects sharing the same type as the {@code aspectClass}
+     *            parameter
      * @param aspectClass
-     *            Class of the aspects to aggregate
-     * @return a MultiAspect or another ITmfEventAspect
+     *            {@link Class} of the aspects to aggregate
+     * @return a {@link MultiAspect} or another {@link ITmfEventAspect}
      */
     public static @Nullable ITmfEventAspect<?> create(Iterable<ITmfEventAspect<?>> aspects, Class<?> aspectClass) {
         int size = Iterables.size(aspects);
@@ -60,7 +64,8 @@ public class MultiAspect<T> implements ITmfEventAspect<T> {
 
         Set<String> names = new HashSet<>();
         for (ITmfEventAspect<?> aspect : aspects) {
-            // Ensure all aspects belong to the same class as the "aspectClass" parameter
+            // Ensure all aspects belong to the same class as the "aspectClass"
+            // parameter
             if (aspectClass.isAssignableFrom(aspect.getClass())) {
                 names.add(aspect.getName());
             } else {
@@ -78,6 +83,57 @@ public class MultiAspect<T> implements ITmfEventAspect<T> {
         return new MultiAspect<>(Iterables.get(names, 0), aspects);
     }
 
+    /**
+     * Factory method for building a {@link MultiAspect} out of {@code existing}
+     * ones. Cannot return {@code null} so it can be used by
+     * {@link Map#computeIfPresent} or similar lambdas.
+     *
+     * @param existing
+     *            The existing ({@link MultiAspect}, or not) aspect
+     * @param toAdd
+     *            The (non-{@link MultiAspect}) aspect to add to the
+     *            {@code existing} one
+     *
+     * @return a {@link MultiAspect} or another {@link ITmfEventAspect};
+     *         {@code existing} if unable to add
+     * @since 8.1
+     */
+    public static ITmfEventAspect<?> createFrom(ITmfEventAspect<?> existing, ITmfEventAspect<?> toAdd) {
+        if (toAdd instanceof MultiAspect) {
+            // TODO: investigate support for potentially adding a multi.
+            throw new IllegalArgumentException(String.format("\"%s\" as the to-add parameter cannot be a MultiAspect.", toAdd.getName())); //$NON-NLS-1$
+        }
+        List<ITmfEventAspect<?>> aspects = new ArrayList<>();
+        ITmfEventAspect<?> subclassOwner;
+        if (existing instanceof MultiAspect) { // >2 twins case, including toAdd
+            MultiAspect<?> multi = (MultiAspect<?>) existing;
+            for (ITmfEventAspect<?> each : multi.fAspects) {
+                aspects.add(each);
+            }
+            subclassOwner = aspects.get(0); // same class for all
+        } else {
+            aspects.add(existing);
+            subclassOwner = existing;
+        }
+        aspects.add(toAdd);
+        Class<?> aspectClass = assignableFor(subclassOwner, toAdd);
+        ITmfEventAspect<?> createdFrom = MultiAspect.create(aspects, aspectClass);
+        if (createdFrom == null) {
+            createdFrom = existing;
+        }
+        return createdFrom;
+    }
+
+    private static Class<?> assignableFor(ITmfEventAspect<?> subclassOwner, ITmfEventAspect<?> toAdd) {
+        Class<?> candidate = subclassOwner.getClass();
+        Class<?> superclass = candidate.getSuperclass();
+        while (superclass != null && !candidate.isAssignableFrom(toAdd.getClass())) {
+            candidate = superclass;
+            superclass = candidate.getSuperclass();
+        }
+        return candidate;
+    }
+
     private MultiAspect(String name, Iterable<ITmfEventAspect<?>> aspects) {
         fName = name;
         fAspects = aspects;
@@ -93,6 +149,7 @@ public class MultiAspect<T> implements ITmfEventAspect<T> {
         return Iterables.get(fAspects, 0).getHelpText();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public @Nullable T resolve(ITmfEvent event) {
         for (ITmfEventAspect<?> aspect : fAspects) {
@@ -103,5 +160,4 @@ public class MultiAspect<T> implements ITmfEventAspect<T> {
         }
         return null;
     }
-
 }

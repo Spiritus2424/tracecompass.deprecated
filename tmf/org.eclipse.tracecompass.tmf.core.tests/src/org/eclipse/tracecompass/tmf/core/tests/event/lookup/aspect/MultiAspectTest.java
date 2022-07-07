@@ -11,7 +11,9 @@
 
 package org.eclipse.tracecompass.tmf.core.tests.event.lookup.aspect;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -26,7 +28,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Simple test for MultiAspect
+ * Simple test for {@link MultiAspect}
  *
  * @author Matthew Khouzam
  */
@@ -59,11 +61,10 @@ public class MultiAspectTest {
     };
 
     /**
-     * Test the resolve of aspects.
+     * Test the {@code resolve} of aspects.
      */
     @Test
     public void testResolve() {
-
         ITmfEventAspect<?> fMultiAspect0 = MultiAspect.create(ImmutableList.of(fAspectNull), TmfCpuAspect.class);
         ITmfEventAspect<?> fMultiAspect1 = MultiAspect.create(ImmutableList.of(fAspect0), TmfCpuAspect.class);
         ITmfEventAspect<?> fMultiAspect2 = MultiAspect.create(ImmutableList.of(fAspect1), TmfCpuAspect.class);
@@ -101,7 +102,7 @@ public class MultiAspectTest {
     }
 
     /**
-     * Simple Foo aspect
+     * Simple {@code Foo} aspect
      */
     interface FooAspect extends ITmfEventAspect<Long> {
     }
@@ -110,7 +111,7 @@ public class MultiAspectTest {
     private long fBarImplRet = 0;
 
     /**
-     * Simple Bar aspect
+     * Simple {@code Bar} aspect
      */
     interface BarAspect extends FooAspect {
     }
@@ -150,7 +151,7 @@ public class MultiAspectTest {
     }
 
     /**
-     * Happy path testing for heterogenous multi-aspect creation
+     * Happy path testing for heterogeneous {@link MultiAspect} creation
      */
     @Test
     public void testCreateHappy() {
@@ -165,12 +166,51 @@ public class MultiAspectTest {
     }
 
     /**
-     * What happens when heterogenous multi-aspect creation is given impossible
-     * arguments
+     * What happens when heterogeneous {@link MultiAspect} creation is given
+     * impossible arguments
      */
     @Test(expected = IllegalArgumentException.class)
     public void testCreateIllegal() {
         // this should cause a problem since foo is not a bar
         MultiAspect.create(ImmutableList.of(new FooImpl(), new BarImpl()), BarAspect.class);
+    }
+
+    /**
+     * What happens when heterogeneous {@link MultiAspect} creation is given
+     * impossible arguments, from {@code existing}
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateIllegalFrom() {
+        // this should cause a problem since 'other' is a multi
+        ITmfEventAspect<?> multi = MultiAspect.create(ImmutableList.of(fAspect0, fAspect1), TmfCpuAspect.class);
+        assertNotNull(multi);
+        ITmfEventAspect<?> other = MultiAspect.create(ImmutableList.of(fAspectNull, fAspect0), TmfCpuAspect.class);
+        assertNotNull(other);
+        MultiAspect.createFrom(multi, other);
+    }
+
+    /**
+     * Happy path testing for heterogeneous {@link MultiAspect} creation, from
+     * {@code existing}
+     */
+    @Test
+    public void testCreateFrom() {
+        ITmfEventAspect<?> multi = MultiAspect.create(ImmutableList.of(fAspect0, fAspect1), TmfCpuAspect.class);
+        assertNotNull(multi);
+        ITmfEventAspect<?> other = MultiAspect.createFrom(multi, fAspectNull);
+        assertNotEquals(multi, other); // could add fAspectNull to multi
+        assertEquals(multi.getClass(), other.getClass()); // MultiAspect, both
+        assertEquals(multi.resolve(DUMMY_EVENT), other.resolve(DUMMY_EVENT));
+    }
+
+    /**
+     * Happy path testing for heterogeneous {@link MultiAspect} creation, from
+     * non-{@link MultiAspect}
+     */
+    @Test
+    public void testCreateFromSingle() {
+        ITmfEventAspect<?> multi = MultiAspect.createFrom(fAspect0, fAspect1);
+        assertNotEquals(fAspect0, multi); // could add fAspect1 beside fAspect0
+        assertEquals(fAspect0.resolve(DUMMY_EVENT), multi.resolve(DUMMY_EVENT));
     }
 }

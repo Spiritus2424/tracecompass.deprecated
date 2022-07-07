@@ -65,7 +65,6 @@ import org.eclipse.tracecompass.tmf.core.model.StyleProperties;
 import org.eclipse.tracecompass.tmf.ui.colors.ColorUtils;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphPresentationProvider;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.StateItem;
-import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ITimeEventStyleStrings;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.LinkedHashMultimap;
@@ -134,9 +133,7 @@ public class TimeGraphLegend extends TitleAreaDialog {
         // Set the minimum size to avoid 0-sized legends from user resize
         parent.getShell().setMinimumSize(150, 150);
 
-        composite.addDisposeListener((e) -> {
-            fResourceManager.dispose();
-        });
+        composite.addDisposeListener(e -> fResourceManager.dispose());
         return composite;
     }
 
@@ -265,6 +262,7 @@ public class TimeGraphLegend extends TitleAreaDialog {
         });
         return gridLayouts;
     }
+
     private void createLinkGroup(Collection<StateItem> linkStates, Composite composite) {
         if (linkStates.isEmpty()) {
             return;
@@ -295,8 +293,8 @@ public class TimeGraphLegend extends TitleAreaDialog {
      * @since 4.0
      */
     protected static boolean isLinkState(StateItem si) {
-        Object itemType = si.getStyleMap().getOrDefault(ITimeEventStyleStrings.itemTypeProperty(), ITimeEventStyleStrings.stateType());
-        return itemType instanceof String && ((String) itemType).equals(ITimeEventStyleStrings.linkType());
+        Object itemType = si.getStyleMap().getOrDefault(StyleProperties.itemTypeProperty(), StyleProperties.stateType());
+        return itemType instanceof String && ((String) itemType).equals(StyleProperties.linkType());
     }
 
     @Override
@@ -312,8 +310,8 @@ public class TimeGraphLegend extends TitleAreaDialog {
     }
 
     /**
-     * Widget for a legend entry has a color chooser, a label, a width and a reset
-     * button
+     * Widget for a legend entry has a color chooser, a label, a width and a
+     * reset button
      *
      * @author Matthew Khouzam
      * @since 3.3
