@@ -1,0 +1,21 @@
+# Dockerfile
+.devcontainer/
+dockerfiles/
+
+# compiled output
+**/target
+workspace/
+
+# Git
+.git*
+
+# Markdown file
+*.md
+
+
+# IDEs and editors
+
+
+# IDE - VSCode
+.vscode/*
+.history/*
