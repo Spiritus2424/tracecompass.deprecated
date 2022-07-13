@@ -3,11 +3,17 @@
 dockerfiles/
 
 # compiled output
-**/target
+**/target/
 workspace/
+**/bin/
+*/.settings/org.sonar.ide.eclipse.core.prefs
+.polyglot.build.properties
+.tycho-consumer-pom.xml
+
 
 # Git
 .git*
+!.git/
 
 # Markdown file
 *.md
@@ -19,3 +25,6 @@ workspace/
 # IDE - VSCode
 .vscode/*
 .history/*
+
+# System Files
+.DS_Store
