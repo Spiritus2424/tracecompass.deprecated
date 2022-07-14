@@ -11,8 +11,6 @@ FROM alpine:3.16.0 as packager
 
 RUN apk --no-cache add openjdk11-jdk openjdk11-jmods maven
 
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
-
 COPY ./ /app/
 
 WORKDIR /app/
@@ -21,7 +19,4 @@ RUN mvn clean install -DskipTests -Dmaven.test.skip=true -Pfilter-grammar -Pctf-
 
 FROM alpine:3.16.0
 
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
-
-COPY --from=packager "$JAVA_HOME" "$JAVA_HOME"
-COPY --from=packager /root/.m2/repository /root/.m2/repository
+COPY --from=packager /root/.m2/repository/org/eclipse/tracecompass /root/.m2/repository/org/eclipse/tracecompass
